@@ -40,11 +40,13 @@ import kotlin.math.roundToInt
 suspend fun headlessCapture(
     context: Context,
     size: DpSize,
+    density: Density = Density(density = 2f),
     content: @Composable () -> Unit,
 ): ImageBitmap = useVirtualDisplay(context) { display ->
     captureComposable(
         context = context,
         size = size,
+        density = density,
         display = display
     ) {
         LaunchedEffect(Unit) {
@@ -80,15 +82,14 @@ private data class CaptureComposableScope(val capture: () -> Unit)
 private suspend fun captureComposable(
     context: Context,
     size: DpSize,
-    density: Density = Density(density = 2f),
-    display: Display = context.getDisplayManager().getDisplay(Display.DEFAULT_DISPLAY),
+    density: Density,
+    display: Display,
     content: @Composable CaptureComposableScope.() -> Unit,
 ): ImageBitmap {
     val presentation = Presentation(context.applicationContext, display).apply {
         window?.decorView?.let { view ->
             view.setViewTreeLifecycleOwner(ProcessLifecycleOwner.get())
             view.setViewTreeSavedStateRegistryOwner(EmptySavedStateRegistryOwner.shared)
-            // If using default display, to ensure this does not appear on top of content.
             view.alpha = 0f
         }
     }
